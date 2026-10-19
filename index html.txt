@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>새말 형성 탐험대 - 어근과 접사 퀴즈</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #e0e7ff;
+      --success: #10b981;
+      --error: #ef4444;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .game-container {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 500px;
+      border-radius: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+      padding: 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header {
+      margin-bottom: 24px;
+    }
+
+    .title-badge {
+      display: inline-block;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .progress-bar-bg {
+      background-color: #e2e8f0;
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #6366f1, #10b981);
+      height: 100%;
+      width: 10%;
+      transition: width 0.4s ease;
+    }
+
+    /* 카드 스타일 및 애니메이션 */
+    .card-wrapper {
+      perspective: 1000px;
+      margin-bottom: 24px;
+    }
+
+    .word-card {
+      background: linear-gradient(135deg, #ffffff, #f1f5f9);
+      border: 3px solid #cbd5e1;
+      border-radius: 20px;
+      padding: 36px 20px;
+      position: relative;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .type-tag {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 12px;
+      color: #fff;
+    }
+
+    .type-tag.root { background-color: #3b82f6; } /* 어근: 파란색 */
+    .type-tag.affix { background-color: #ec4899; } /* 접사: 핑크색 */
+
+    .card-word {
+      font-size: 48px;
+      font-weight: 900;
+      color: #0f172a;
+      margin: 12px 0 8px 0;
+      letter-spacing: 2px;
+    }
+
+    .card-hint {
+      font-size: 14px;
+      color: #64748b;
+      word-break: keep-all;
+    }
+
+    /* 정답/오답 애니메이션 클래스 */
+    .correct-anim {
+      animation: pop 0.5s ease;
+      border-color: var(--success) !important;
+      background: #ecfdf5 !important;
+    }
+
+    .incorrect-anim {
+      animation: shake 0.4s ease;
+      border-color: var(--error) !important;
+      background: #fef2f2 !important;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+
+    /* 입력 폼 */
+    .input-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 16px;
+      border: 2px solid #cbd5e1;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 600;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+
+    button.submit-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0 24px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    button.submit-btn:hover {
+      background-color: #4338ca;
+    }
+
+    button.submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* 피드백 메시지 */
+    .message-area {
+      min-height: 28px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .msg-correct { color: var(--success); }
+    .msg-incorrect { color: var(--error); }
+
+    /* 성공 화면 */
+    .clear-screen {
+      display: none;
+      padding: 20px 0;
+    }
+
+    .trophy-emoji {
+      font-size: 72px;
+      margin-bottom: 16px;
+      animation: pop 0.8s infinite alternate;
+    }
+
+    .clear-title {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .clear-desc {
+      font-size: 16px;
+      color: #64748b;
+      margin-bottom: 24px;
+    }
+
+    .restart-btn {
+      background-color: var(--success);
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <!-- 게임 플레이 화면 -->
+    <div id="game-screen">
+      <div class="header">
+        <span class="title-badge">중1 국어 2단원 84-85p</span>
+        <h2>새말 형성 탐험대 🔍</h2>
+      </div>
+
+      <div class="status-bar">
+        <span id="question-count">문제 1 / 10</span>
+        <span id="score-count">점수: 0점</span>
+      </div>
+
+      <div class="progress-bar-bg">
+        <div id="progress-bar" class="progress-bar-fill"></div>
+      </div>
+
+      <div class="card-wrapper">
+        <div id="word-card" class="word-card">
+          <span id="type-tag" class="type-tag affix">접사</span>
+          <div id="card-word" class="card-word">풋-</div>
+          <p id="card-hint" class="card-hint">어근 앞에 붙어 ‘덜 익은’의 뜻을 더함</p>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <input type="text" id="user-input" placeholder="새로운 단어를 입력하세요" autocomplete="off">
+        <button class="submit-btn" id="submit-btn">확인</button>
+      </div>
+
+      <div id="message" class="message-area"></div>
+    </div>
+
+    <!-- 10문제 클리어 성공 화면 -->
+    <div id="clear-screen" class="clear-screen">
+      <div class="trophy-emoji">🎉🏆🎉</div>
+      <h2 class="clear-title">축하합니다! 성공!</h2>
+      <p class="clear-desc">어근과 접사를 결합하여 10개의 새말을 모두 완성했어요! (총 100점 달성)</p>
+      <button class="restart-btn" id="restart-btn">다시 도전하기</button>
+    </div>
+  </div>
+
+  <script>
+    // 교과서 84-85p 및 단어 형성 원리에 맞춘 10개 문항
+    const quizData = [
+      {
+        type: '접사',
+        word: '풋-',
+        hint: '‘덜 익은’의 뜻을 더하는 접두사 (어근의 앞에 붙어요)',
+        tagClass: 'affix',
+        validAnswers: ['풋사랑', '풋과일', '풋사과', '풋고추', '풋나물', '풋잠']
+      },
+      {
+        type: '어근',
+        word: '물',
+        hint: '다른 어근이나 접사와 결합하는 실질적 의미의 어근',
+        tagClass: 'root',
+        validAnswers: ['샘물', '물개', '먹물', '물통', '물병', '눈물', '물수제비', '물걸레', '수돗물', '물구름', '물안개']
+      },
+      {
+        type: '접사',
+        word: '-꾼',
+        hint: '‘어떤 일을 전문적/습관적으로 하는 사람’의 뜻을 더함 (어근의 뒤에 붙어요)',
+        tagClass: 'affix',
+        validAnswers: ['누리꾼', '사냥꾼', '장난꾼', '구경꾼', '낚시꾼', '일꾼', '살림꾼']
+      },
+      {
+        type: '접사',
+        word: '햇-',
+        hint: '‘당해에 새로 난’의 뜻을 더하는 접두사',
+        tagClass: 'affix',
+        validAnswers: ['햇밤', '햇곡식', '햇과일', '햇쌀', '햇감자', '햇고구마', '햇보리']
+      },
+      {
+        type: '접사',
+        word: '-쟁이',
+        hint: '‘그 속성을 유난히 많이 지닌 사람’의 뜻을 더함 (어근의 뒤에 붙어요)',
+        tagClass: 'affix',
+        validAnswers: ['방귀쟁이', '고집쟁이', '멋쟁이', '겁쟁이', '수다쟁이', '떼쟁이', '개구쟁이']
+      },
+      {
+        type: '어근',
+        word: '꿈',
+        hint: '다른 어근과 결합하여 합성어를 만드는 어근',
+        tagClass: 'root',
+        validAnswers: ['꿈길', '꿈나무', '꿈결', '꿈나라', '꿈자리', '돼지꿈', '첫꿈']
+      },
+      {
+        type: '접사',
+        word: '홑-',
+        hint: '‘한 겹으로 된’ 또는 ‘하나인’의 뜻을 더함',
+        tagClass: 'affix',
+        validAnswers: ['홑이불', '홑잎', '홑옷', '홑문', '홑몸']
+      },
+      {
+        type: '접사',
+        word: '-질',
+        hint: '‘도구를 사용하는 동작이나 일’의 뜻을 더하는 접미사',
+        tagClass: 'affix',
+        validAnswers: ['부채질', '가위질', '걸레질', '다리미질', '숟가락질', '붓질', '칼질']
+      },
+      {
+        type: '접사',
+        word: '잔-',
+        hint: '‘가느다란’ 또는 ‘자잘한’의 뜻을 더하는 접두사',
+        tagClass: 'affix',
+        validAnswers: ['잔가지', '잔가시', '잔머리', '잔주름', '잔돈', '잔심부름']
+      },
+      {
+        type: '어근',
+        word: '꽃',
+        hint: '다른 어근이나 접사와 결합하는 어근',
+        tagClass: 'root',
+        validAnswers: ['꽃집', '나팔꽃', '꽃비', '불꽃', '눈꽃', '들꽃', '제비꽃', '꽃밭']
+      }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let isProcessing = false;
+
+    // DOM 요소
+    const gameScreen = document.getElementById('game-screen');
+    const clearScreen = document.getElementById('clear-screen');
+    const questionCountEl = document.getElementById('question-count');
+    const scoreCountEl = document.getElementById('score-count');
+    const progressBarEl = document.getElementById('progress-bar');
+    const wordCardEl = document.getElementById('word-card');
+    const typeTagEl = document.getElementById('type-tag');
+    const cardWordEl = document.getElementById('card-word');
+    const cardHintEl = document.getElementById('card-hint');
+    const userInputEl = document.getElementById('user-input');
+    const submitBtn = document.getElementById('submit-btn');
+    const messageEl = document.getElementById('message');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // 화면 업데이트
+    function loadQuestion() {
+      const q = quizData[currentIndex];
+      typeTagEl.textContent = q.type;
+      typeTagEl.className = `type-tag ${q.tagClass}`;
+      cardWordEl.textContent = q.word;
+      cardHintEl.textContent = q.hint;
+      
+      questionCountEl.textContent = `문제 ${currentIndex + 1} / ${quizData.length}`;
+      scoreCountEl.textContent = `점수: ${score}점`;
+      progressBarEl.style.width = `${((currentIndex + 1) / quizData.length) * 100}%`;
+      
+      userInputEl.value = '';
+      userInputEl.focus();
+      messageEl.textContent = '';
+      messageEl.className = 'message-area';
+      wordCardEl.className = 'word-card';
+      isProcessing = false;
+    }
+
+    // 정답 제출 확인
+    function checkAnswer() {
+      if (isProcessing) return;
+
+      const inputVal = userInputEl.value.trim();
+      if (!inputVal) {
+        showMessage('단어를 입력해 주세요!', 'msg-incorrect');
+        return;
+      }
+
+      const q = quizData[currentIndex];
+      const isCorrect = q.validAnswers.includes(inputVal);
+
+      if (isCorrect) {
+        isProcessing = true;
+        score += 10;
+        scoreCountEl.textContent = `점수: ${score}점`;
+        
+        wordCardEl.classList.add('correct-anim');
+        showMessage('정답! 🎉 (+10점)', 'msg-correct');
+
+        setTimeout(() => {
+          currentIndex++;
+          if (currentIndex < quizData.length) {
+            loadQuestion();
+          } else {
+            showClearScreen();
+          }
+        }, 1200);
+
+      } else {
+        wordCardEl.classList.add('incorrect-anim');
+        showMessage('다시 해보세요! (사전에 없거나 짜임에 맞지 않는 단어예요)', 'msg-incorrect');
+
+        setTimeout(() => {
+          wordCardEl.classList.remove('incorrect-anim');
+        }, 400);
+      }
+    }
+
+    function showMessage(text, className) {
+      messageEl.textContent = text;
+      messageEl.className = `message-area ${className}`;
+    }
+
+    function showClearScreen() {
+      gameScreen.style.display = 'none';
+      clearScreen.style.display = 'block';
+    }
+
+    function resetGame() {
+      currentIndex = 0;
+      score = 0;
+      clearScreen.style.display = 'none';
+      gameScreen.style.display = 'block';
+      loadQuestion();
+    }
+
+    // 이벤트 리스너
+    submitBtn.addEventListener('click', checkAnswer);
+    userInputEl.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') checkAnswer();
+    });
+    restartBtn.addEventListener('click', resetGame);
+
+    // 최초 게임 시작
+    loadQuestion();
+  </script>
+</body>
+</html>
